@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-order-service
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-order-service
+  template:
+    metadata:
+      labels:
+        app: ecommerce-order-service
+    spec:
+      containers:
+        - name: order-service
+          image: {{ .Values.order.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.order.port }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.order.port | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://ecommerce-postgres:5432/orderdb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.postgres.username | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.postgres.password | quote }}
+            - name: PRODUCT_SERVICE_URL
+              value: http://ecommerce-product-service:8081
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.order.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-order-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: ecommerce-order-service
+  ports:
+    - port: {{ .Values.order.port }}
+      targetPort: {{ .Values.order.port }}

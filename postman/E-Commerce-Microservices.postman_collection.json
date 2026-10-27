@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "E-Commerce Microservices Suite",
+    "description": "Gateway at localhost:8080. Product records 1-3 are seeded on first start.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "orderId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Gateway health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/health"
+      }
+    },
+    {
+      "name": "List products",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products"
+      }
+    },
+    {
+      "name": "Get product 1",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/products/{{productId}}"
+      }
+    },
+    {
+      "name": "Create product",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"USB-C Hub\",\n  \"description\": \"Seven-port USB-C hub\",\n  \"price\": 2499.0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/products"
+      }
+    },
+    {
+      "name": "Create order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "List orders",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "Get order 1",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/orders/{{orderId}}"
+      }
+    }
+  ]
+}

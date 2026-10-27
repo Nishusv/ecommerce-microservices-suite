@@ -1,0 +1,25 @@
+name: Build and Test Microservices
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build Product Catalog
+        run: mvn -B -f product-service/pom.xml test package
+      - name: Build Order Management
+        run: mvn -B -f order-service/pom.xml test package
+      - name: Build API Gateway
+        run: mvn -B -f api-gateway/pom.xml test package
+      - name: Build container images
+        run: |
+          docker build -t ecommerce/product-service:ci ./product-service
+          docker build -t ecommerce/order-service:ci ./order-service
+          docker build -t ecommerce/api-gateway:ci ./api-gateway

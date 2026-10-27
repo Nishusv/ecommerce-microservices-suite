@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce_demo_pw
+      POSTGRES_DB: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  product-service:
+    build: ./product-service
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/productdb
+      SPRING_DATASOURCE_USERNAME: ecommerce
+      SPRING_DATASOURCE_PASSWORD: ecommerce_demo_pw
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports: ["8081:8081"]
+
+  order-service:
+    build: ./order-service
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orderdb
+      SPRING_DATASOURCE_USERNAME: ecommerce
+      SPRING_DATASOURCE_PASSWORD: ecommerce_demo_pw
+      PRODUCT_SERVICE_URL: http://product-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    ports: ["8082:8082"]
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      SERVER_PORT: 8080
+      PRODUCT_SERVICE_URL: http://product-service:8081
+      ORDER_SERVICE_URL: http://order-service:8082
+    depends_on: [product-service, order-service]
+    ports: ["8080:8080"]
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    ports: ["9090:9090"]
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    depends_on: [product-service, order-service, api-gateway]
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes: ["./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro"]
+    depends_on: [prometheus]
+
+volumes:
+  postgres_data:

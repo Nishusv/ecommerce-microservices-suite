@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-api-gateway
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-api-gateway
+  template:
+    metadata:
+      labels:
+        app: ecommerce-api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: {{ .Values.gateway.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.gateway.port }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.gateway.port | quote }}
+            - name: PRODUCT_SERVICE_URL
+              value: http://ecommerce-product-service:8081
+            - name: ORDER_SERVICE_URL
+              value: http://ecommerce-order-service:8082
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.gateway.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-api-gateway
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: ecommerce-api-gateway
+  ports:
+    - port: {{ .Values.gateway.port }}
+      targetPort: {{ .Values.gateway.port }}

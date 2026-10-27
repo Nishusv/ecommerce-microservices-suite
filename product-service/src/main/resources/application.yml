@@ -1,0 +1,22 @@
+server:
+  port: ${SERVER_PORT:8081}
+spring:
+  application:
+    name: product-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/productdb}
+    username: ${SPRING_DATASOURCE_USERNAME:ecommerce}
+    password: ${SPRING_DATASOURCE_PASSWORD:ecommerce_demo_pw}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true

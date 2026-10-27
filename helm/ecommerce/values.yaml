@@ -1,0 +1,16 @@
+namespace: ecommerce
+imagePullPolicy: IfNotPresent
+postgres:
+  image: postgres:16-alpine
+  username: ecommerce
+  password: ecommerce_demo_pw
+  storage: 1Gi
+product:
+  image: ecommerce/product-service:1.0.0
+  port: 8081
+order:
+  image: ecommerce/order-service:1.0.0
+  port: 8082
+gateway:
+  image: ecommerce/api-gateway:1.0.0
+  port: 8080

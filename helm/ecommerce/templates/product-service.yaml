@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-product-service
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-product-service
+  template:
+    metadata:
+      labels:
+        app: ecommerce-product-service
+    spec:
+      containers:
+        - name: product-service
+          image: {{ .Values.product.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.product.port }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.product.port | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://ecommerce-postgres:5432/productdb
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.postgres.username | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.postgres.password | quote }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.product.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-product-service
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: ecommerce-product-service
+  ports:
+    - port: {{ .Values.product.port }}
+      targetPort: {{ .Values.product.port }}
